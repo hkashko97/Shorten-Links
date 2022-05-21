@@ -1,0 +1,29 @@
+<style media="screen">
+  .loading-section{
+    width:50%;
+    margin:auto;
+    padding:20px;
+  }
+  #timeleft{
+    color:maroon;
+    font-size:20px;
+    font-family:tahoma;
+  }
+</style>
+<div class="loading-section">
+  <h2>We will redirect you after <span id="timeleft"></span></h2>
+  <p>here is your data </p>
+</div>
+<script type="text/javascript">
+  let time = 3;
+  let iteration = 1;
+  let counter = 0;
+  let interval = setInterval(()=> {
+    if(time - counter === 0){
+      clearInterval(interval);
+      window.location.href = '<%= URL.URL %>';
+    }
+    timeleft.textContent = time - counter;
+    counter++;
+  },iteration * 1000)
+</script>

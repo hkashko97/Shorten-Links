@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Shorten Links service</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+          integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <style media="screen">
+        .row {
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="container fluid">
+        <div class="row justify-content-md-center">
+            <div class="col-lg-8">
+                <h2>Shorten Links Service
+                    <span style="color:Dodgerblue;">
+                        <i class="fas fa-link"></i>
+                    </span>
+                </h2>
+            </div>
+            <div class="col-lg-8">
+                <form class="input-group mb-3" method="post" :onsubmit="handleSubmit">
+                    <input type="text" v-model="inputValue" ref="input" class="form-control"
+                           placeholder="Input your URL....">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-primary" type="submit" @click="handleSubmit">Check</button>
+                    </div>
+                </form>
+
+                <div v-bind:class="{green:!status,red:status,status_label:true}" v-show="!isInit">
+                    <div class="alert alert-danger" role="alert" v-show="status">
+                        {{this.status ? 'Exist' :''}}
+                    </div>
+                </div>
+
+                <div class="generate">
+                    <button v-if="!status && !isInit" id="generateBtn" type="button" @click="handleGenerateURL"
+                            class="btn btn-success">Generate
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-md-center">
+            <div class="col-lg-8">
+                <div class="shortend-url" v-if="result">
+                    <a :href="result.URL" target="_blank">{{this.result.mappedURL}}</a>
+                </div>
+                <div class="shorten-links">
+                    <ul class="list-group">
+                        <li v-for="item in shortenURLS" class="list-group-item">
+                            <a :href="item.URL" target="_blank">URL</a> &nbsp;&nbsp;&nbsp;&nbsp; <a
+                                :href="item.mappedURL" target="_blank">Shorten URL</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', (event) => {
+        new Vue({
+            el: '#app',
+            data: {
+                result: null,
+                status: false,
+                inputValue: '',
+                isInit: true,
+                shortenURLS: []
+            },
+            mounted() {
+                this.$refs.input.focus();
+            },
+            beforeMount() {
+                axios.post('/', {
+                    withCredentials: false
+                })
+                    .then(res => {
+                        console.log(res.data, 'res');
+                        this.shortenURLS = res.data;
+                    })
+            },
+            methods: {
+                isURLExists() {
+                    let formatedURL = this.inputValue.replace(/\//g, '_');
+                    axios.post(`/check/${formatedURL}`, {
+                        withCredentials: false,
+                    })
+                        .then(res => {
+                            this.result = res.data;
+                            this.status = !!res.data;
+                            this.$refs.input.blur();
+                            this.$refs.input.focus();
+                            this.isInit = false;
+                        })
+                        .catch(err => console.log(err))
+                },
+                handleSubmit(e) {
+                    if (this.inputValue !== '') {
+                        this.isURLExists();
+                    }
+                    e.preventDefault();
+                },
+                handleGenerateURL() {
+                    const url = this.inputValue.replace(/\//g, '_');
+                    axios.post(`/generate/${url}`, {
+                        withCredentials: false,
+                    })
+                        .then(res => {
+                            this.result = res.data;
+                            this.shortenURLS = res.data;
+                            this.isInit = true;
+                        })
+                        .catch(err => console.log(err))
+                }
+            }
+        })
+    })
+</script>
+</body>
+</html>
